@@ -5,7 +5,7 @@ export const inngest = new Inngest({
   id: "personalized-newsletter",
   name: "Personalized Newsletter Generator",
   signingKey: process.env.INNGEST_SIGNING_KEY,
-  eventKey: process.env.INGGEST_EVENT_KEY,
+  eventKey: process.env.INNGEST_EVENT_KEY,
 
   //For production
   baseUrl: process.env.VERCEL_URL 
