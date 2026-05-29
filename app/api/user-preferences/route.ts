@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { inngest } from "@/inngest/client";
 
 export async function POST(request: NextRequest) {
+  // DEBUG: Log the client
+  console.log("📡 Using inngest client from @/inngest/client");
+  console.log("🔑 Client has event key:", !!inngest.eventKey);
+  
   const supabase = await createClient();
 
   const {

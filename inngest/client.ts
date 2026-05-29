@@ -9,3 +9,5 @@ export const inngest = new Inngest({
   // mode: "cloud",
 });
 
+// CRITICAL DEBUG LINE
+console.log("✅ Inngest client loaded with event key:", process.env.INNGEST_EVENT_KEY?.substring(0, 10) + "...");   
