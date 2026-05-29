@@ -6,6 +6,6 @@ export const inngest = new Inngest({
   name: "Personalized Newsletter Generator",
   signingKey: process.env.INNGEST_SIGNING_KEY,
   eventKey: process.env.INNGEST_EVENT_KEY,
-  mode: "cloud",
+  // mode: "cloud",
 });
 
