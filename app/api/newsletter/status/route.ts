@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { inngest } from "@/inngest/client"; // Removed unused Inngest import
 
 // const INNGEST_API = "http://localhost:8288/v1";
-const INNGEST_API = process.env.INNGEST_API_URL || "https://api.inngest.com/";
+const INNGEST_API = "https://api.inngest.com/v1";
 
 // Define interfaces for better type safety
 interface InngestRun {
