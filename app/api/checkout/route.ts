@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unknown plan" }, { status: 400 });
   }
 
-  const origin = "http://localhost:3000";
+  const origin = "https://ai-newsletter-saas.vercel.app/";
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "subscription",
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     metadata: { userId: userId, plan },
 
     success_url: `${origin}/select`,
-    cancel_url: `http://localhost:3000/subscribe`,
+    cancel_url: `https://ai-newsletter-saas.vercel.app/subscribe`,
     customer_email: email,
   });
 
