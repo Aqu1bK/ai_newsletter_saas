@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -51,18 +50,19 @@ export default function SignInPage() {
         if (error) throw error;
         router.push("/dashboard");
       }
-    } catch (error: any) {
-      setError(error.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12px-4sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-4ont-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Personalized AI Newsletter
           </h1>
           <p className="text-xl text-gray-600">
@@ -128,7 +128,7 @@ export default function SignInPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2ocus:ring-blue-500 ${
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
                   isLoading
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-blue-600 hover:bg-blue-700"
@@ -179,7 +179,7 @@ export default function SignInPage() {
             >
               {isSignUp
                 ? "Already have an account? Sign in"
-                : "Don't have an account? Sign up"}
+                : "Don&apos;t have an account? Sign up"}
             </button>
           </div>
         </div>

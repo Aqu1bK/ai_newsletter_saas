@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -48,23 +48,9 @@ const frequencyOptions = [
 export default function SelectPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedFrequency, setSelectedFrequency] = useState<string>("weekly");
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
-
-  // useEffect(() => {
-  //   fetch("/api/subscription-status")
-  //     .then((r) => r.json())
-  //     .then((json) => {
-  //       if (!json.active) {
-  //         router.replace("/subscribe");
-  //       }
-  //     })
-  //     .catch(() => {
-  //       router.replace("/subscribe");
-  //     });
-  // }, [router]);
 
   const handleCategoryToggle = (categoryId: string) => {
     setSelectedCategories((prev) =>
@@ -104,7 +90,7 @@ export default function SelectPage() {
       }
 
       alert(
-        "Your newsletter preferences have been saved! You'll start receiving newsletters according to your schedule."
+        "Your newsletter preferences have been saved! You&apos;ll start receiving newsletters according to your schedule."
       );
       router.push("/dashboard");
     } catch (error) {
@@ -138,7 +124,7 @@ export default function SelectPage() {
               Choose Your Categories
             </h2>
             <p className="text-gray-600 mb-6">
-              Select the topics you'd like to see in your personalized
+              Select the topics you&apos;d like to see in your personalized
               newsletter
             </p>
 
@@ -255,18 +241,19 @@ export default function SelectPage() {
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
               {selectedCategories.length} categor
-              {selectedCategories.length !== 1 ? "ies" : "y"} selected •
+              {selectedCategories.length !== 1 ? "ies" : "y"} selected &bull;{" "}
               {selectedFrequency} delivery
             </div>
             <button
               type="submit"
+              disabled={isSaving || selectedCategories.length === 0}
               className={`px-6 py-3 rounded-lg font-medium text-white transition-colors ${
-                selectedCategories.length === 0
+                isSaving || selectedCategories.length === 0
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
-              Save Preferences
+              {isSaving ? "Saving..." : "Save Preferences"}
             </button>
           </div>
         </form>

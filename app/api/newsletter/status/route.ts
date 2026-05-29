@@ -1,11 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Inngest } from "inngest";
-import { inngest } from "@/inngest/client";
+import { inngest } from "@/inngest/client"; // Removed unused Inngest import
 
 const INNGEST_API = "http://localhost:8288/v1";
 
+// Define interfaces for better type safety
+interface InngestRun {
+  id: string;
+  status: "Completed" | "Failed" | "Cancelled" | "Running" | string;
+  output?: {
+    error?: string;
+    [key: string]: unknown;
+  };
+  event_id?: string;
+  started_at?: string;
+  ended_at?: string;
+}
+
+interface InngestRunResponse {
+  data: InngestRun[];
+}
+
 /** Fetch all runs for a given event ID */
-async function getRuns(eventId: string) {
+async function getRuns(eventId: string): Promise<InngestRun[]> {
   const res = await fetch(`${INNGEST_API}/events/${eventId}/runs`, {
     headers: {
       Authorization: `Bearer ${process.env.INGGEST_SIGNING_KEY}`,
@@ -15,13 +31,13 @@ async function getRuns(eventId: string) {
     const err = await res.text();
     throw new Error(`Inngest list-runs error: ${err}`);
   }
-  const json = await res.json();
+  const json: InngestRunResponse = await res.json();
   return json.data;
 }
 
 /** Poll until the first run is Completed/Failed/Cancelled */
-async function getRunOutput(eventId: string) {
-  let runs = await getRuns(eventId);
+async function getRunOutput(eventId: string): Promise<InngestRun> {
+  const runs = await getRuns(eventId);
   if (!runs.length) {
     throw new Error("No runs found for event");
   }
@@ -63,8 +79,14 @@ export async function GET(request: NextRequest) {
       result: run.output,
       error: run.output?.error || undefined,
     });
-  } catch (e: any) {
-    console.error("Error in status route:", e);
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (error: unknown) {  // Changed from 'e: any' to 'error: unknown'
+    console.error("Error in status route:", error);
+    
+    // Type-safe error handling
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : "An unexpected error occurred";
+    
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
