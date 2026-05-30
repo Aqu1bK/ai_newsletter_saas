@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { inngest } from "@/inngest/client"; // Removed unused Inngest import
 
 // const INNGEST_API = "http://localhost:8288/v1";
 const INNGEST_API = "https://api.inngest.com/v1";

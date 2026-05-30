@@ -1,12 +1,28 @@
+// app/api/user-preferences/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { inngest } from "@/inngest/client";
+import { Inngest } from "inngest";
+
+// Create Inngest client directly with explicit event key
+const getInngestClient = () => {
+  const eventKey = process.env.INNGEST_EVENT_KEY;
+  const signingKey = process.env.INNGEST_SIGNING_KEY;
+  
+  if (!eventKey) {
+    throw new Error("INNGEST_EVENT_KEY is not set");
+  }
+  
+  console.log("🔑 Event key starts with:", eventKey.substring(0, 10));
+  console.log("🔑 Event key length:", eventKey.length);
+  
+  return new Inngest({
+    id: "personalized-newsletter",
+    eventKey: eventKey,
+    signingKey: signingKey,
+  });
+};
 
 export async function POST(request: NextRequest) {
-  // DEBUG: Log the client
-  console.log("📡 Using inngest client from @/inngest/client");
-  console.log("🔑 Client has event key:", !!inngest.eventKey);
-  
   const supabase = await createClient();
 
   const {
@@ -59,6 +75,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Get fresh Inngest client with explicit event key
+    const inngest = getInngestClient();
 
     // ✅ Send immediate test newsletter NOW
     console.log("📨 Sending immediate test newsletter...");
@@ -211,6 +230,9 @@ async function rescheduleUserNewsletter(userId: string) {
     }
 
     nextScheduleTime.setHours(9, 0, 0, 0);
+
+    // Get fresh Inngest client with explicit event key
+    const inngest = getInngestClient();
 
     await inngest.send({
       name: "newsletter.schedule",
