@@ -29,60 +29,54 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
-  // IMPORTANT: DO NOT REMOVE auth.getUser()
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // If no user and not on signin page, redirect to signin
   if (!user && !request.nextUrl.pathname.startsWith("/signin")) {
-    // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
     url.pathname = "/signin";
     return NextResponse.redirect(url);
   }
 
-  if (
-    user &&
-    (request.nextUrl.pathname.startsWith("/select") ||
-      request.nextUrl.pathname.startsWith("/dashboard"))
-  ) {
+  // If user is authenticated, check subscription only for dashboard
+  if (user && request.nextUrl.pathname.startsWith("/dashboard")) {
     try {
       const res = await fetch(
         new URL("/api/subscription-status", request.url),
-        { headers: { cookie: request.headers.get("cookie") || "" } }
+        { 
+          headers: { 
+            cookie: request.headers.get("cookie") || "" 
+          },
+          // Add cache: 'no-store' to prevent caching issues
+          cache: 'no-store'
+        }
       );
-      const { active } = await res.json();
-
-      if (!active) {
+      
+      const data = await res.json();
+      
+      // Only redirect if explicitly not active
+      // AND user is not on free plan
+      if (!data.active && data.plan !== 'free') {
         const url = request.nextUrl.clone();
         url.pathname = "/subscribe";
         return NextResponse.redirect(url);
       }
+      
+      // If user is active or on free plan, allow access to dashboard
     } catch (error) {
       console.error("Subscription check failed:", error);
-      const url = request.nextUrl.clone();
-      url.pathname = "/subscribe";
-      return NextResponse.redirect(url);
+      // Don't redirect on error - let user access dashboard
+      // This prevents blocking users due to API issues
     }
   }
 
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  // If you're creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
+  // Allow access to subscribe page for authenticated users
+  if (user && request.nextUrl.pathname.startsWith("/subscribe")) {
+    // Users can always access the subscribe page
+    return supabaseResponse;
+  }
 
   return supabaseResponse;
 }

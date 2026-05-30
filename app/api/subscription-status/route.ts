@@ -1,36 +1,72 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+// app/api/subscription-status/route.ts
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
-  // 1) identify the user
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+export async function GET() {
+  try {
+    const supabase = createRouteHandlerClient({ cookies });
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return NextResponse.json({ 
+        active: false,
+        error: 'Unauthorized' 
+      }, { status: 401 });
+    }
+
+    // Check if subscription exists
+    let { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    // If no subscription exists, create one with free plan
+    if (!subscription) {
+      const { data: newSub, error: createError } = await supabase
+        .from('subscriptions')
+        .insert({
+          user_id: user.id,
+          status: 'active', // Changed from 'inactive' to 'active'
+          plan: 'free'
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error("Error creating subscription:", createError);
+        return NextResponse.json({ 
+          active: true, // Allow access even if creation fails temporarily
+          plan: 'free',
+          status: 'active'
+        });
+      }
+
+      subscription = newSub;
+    }
+
+    // User is active if they have:
+    // - active or trialing subscription
+    // - free plan (always active)
+    const isActive = 
+      subscription?.status === 'active' || 
+      subscription?.status === 'trialing' || 
+      subscription?.plan === 'free';
+
+    return NextResponse.json({ 
+      active: isActive,
+      subscription: subscription,
+      plan: subscription?.plan || 'free',
+      status: subscription?.status || 'active'
+    });
+  } catch (error) {
+    console.error("Subscription status error:", error);
+    // Default to active to prevent blocking users
+    return NextResponse.json({ 
+      active: true,
+      error: 'Error checking status, defaulting to active'
+    });
   }
-
-  // 2) query their subscription
-  const { data, error } = await supabase
-    .from("subscriptions")
-    .select("status, current_period_end")
-    .eq("user_id", user.id)
-    .single();
-
-  if (error && error.code !== "PGRST116") {
-    // PGRST116 = no rows
-    console.error("DB error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  // If no subscription row or status isn’t “active”, we treat them as unpaid
-  const active =
-    data?.status === "active" && new Date(data.current_period_end) > new Date();
-
-  return NextResponse.json({
-    active,
-    status: data?.status || "none",
-    expires_at: data?.current_period_end || null,
-  });
 }

@@ -20,24 +20,32 @@ export default function DashboardPage() {
   const { user } = useAuth();
 
   useEffect(() => {
+
+      if (!user) {
+      router.replace("/signin");
+      return;
+    }
+
     fetch("/api/user-preferences")
       .then((response) => {
         if (response && response.ok) {
           return response.json();
         }
+        throw new Error("Failed to fetch preferences");
       })
       .then((data) => {
         if (data) {
           setPreferences(data);
         }
       })
-      .catch(() => {
-        router.replace("/subscribe");
+      .catch((error) => {
+        // router.replace("/subscribe");
+          console.error("Error fetching preferences:", error);
       })
       .finally(() => {
         setIsLoading(false);
       });
-  }, [router]);
+  }, [user, router]);
 
   const handleUpdatePreferences = () => {
     router.push("/select");
