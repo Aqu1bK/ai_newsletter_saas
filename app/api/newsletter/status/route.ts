@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // const INNGEST_API = "http://localhost:8288/v1";
-const INNGEST_API = "https://api.inngest.com/v1";
+const INNGEST_API = "https://api.inngest.com";
 
 // Define interfaces for better type safety
 interface InngestRun {
@@ -24,7 +24,7 @@ interface InngestRunResponse {
 async function getRuns(eventId: string): Promise<InngestRun[]> {
   const res = await fetch(`${INNGEST_API}/events/${eventId}/runs`, {
     headers: {
-      Authorization: `Bearer ${process.env.INGGEST_SIGNING_KEY}`,
+      Authorization: `Bearer ${process.env.INNGEST_SIGNING_KEY}`,
     },
   });
   if (!res.ok) {
